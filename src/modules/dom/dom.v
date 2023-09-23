@@ -25,11 +25,11 @@ pub fn Element.new(name string, attrs AttrMap, children []Node) Element {
 	}
 }
 
-type Node = Text | Element
+pub type Node = Text | Element
 
 struct ElementData {
 	tag_name string
 	attributes AttrMap
 }
 
-type AttrMap = map[string]string
+pub type AttrMap = map[string]string
