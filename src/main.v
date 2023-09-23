@@ -1,7 +1,7 @@
 module main
 import os { read_file, abs_path }
 import dom { Element, Text }
-import html_parser { parse }
+import parser.html { parse }
 
 
 fn main() {
