@@ -4,6 +4,8 @@ struct NodeBase {
 	children []Node
 }
 
+pub type Node = Text | Element
+
 pub struct Text {
 	NodeBase
 	content string
@@ -24,8 +26,6 @@ pub fn Element.new(name string, attrs AttrMap, children []Node) Element {
 		element_data: ElementData{ tag_name: name, attributes: attrs }
 	}
 }
-
-pub type Node = Text | Element
 
 struct ElementData {
 	tag_name string
