@@ -1,4 +1,4 @@
-module css_parser
+module css
 
 import encoding.hex
 import parser { Parser }
@@ -58,7 +58,7 @@ fn (mut p CssParser) parse_simple_selector() Selector {
 
 // Parse a list of rule sets, separated by optional whitespace.
 fn (p CssParser) parse_rules() []Rule {
-	mut rules := []Rule{}
+	mut rules := []css_types.Rule{}
 	for {
 		p.consume_whitespace()
 		if p.eof() {
@@ -78,7 +78,7 @@ fn (p CssParser) parse_rule() Rule {
 
 // Parse a comma-separated list of selectors.
 fn (p CssParser) parse_selectors() []Selector {
-	mut selectors := []Selector{}
+	mut selectors := []css_types.Selector{}
 	for {
 		selectors << p.parse_simple_selector()
 		p.consume_whitespace()
@@ -112,7 +112,7 @@ fn (p CssParser) parse_selectors() []Selector {
 // Parse a list of declarations enclosed in `{ ... }`.
 fn (p CssParser) parse_declarations() []Declaration {
 	assert p.consume_rune() == `{`
-	mut declarations := []Declaration{}
+	mut declarations := []css_types.Declaration{}
 	for {
 		p.consume_whitespace()
 		if p.current_rune() == '}' {

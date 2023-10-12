@@ -1,15 +1,15 @@
 module parser
-import os { read_file }
+
 import strings { new_builder }
 
 pub struct Parser {
 	input string
-	mut:
+mut:
 	pos int
 }
 
 // Read the current rune without consuming it.
-pub fn (p Parser) current_rune() rune  {
+pub fn (p Parser) current_rune() rune {
 	return p.input.runes()[p.pos]
 }
 
@@ -41,5 +41,7 @@ pub fn (mut p Parser) consume_while(test fn (rune) bool) string {
 
 // Consume and discard zero or more whitespace characters.
 pub fn (mut p Parser) consume_whitespace() {
-	p.consume_while(fn (r rune) bool { return r.str().is_blank() })
+	p.consume_while(fn (r rune) bool {
+		return r.str().is_blank()
+	})
 }

@@ -1,4 +1,4 @@
-module css_types
+module css
 
 struct Stylesheet {
 	rules []Rule
@@ -34,7 +34,7 @@ struct Declaration {
 	value Value
 }
 
-type Value = Color | Keyword | Length
+pub type Value = Color | Keyword | Length
 
 type Keyword = string
 

@@ -18,7 +18,7 @@ fn main() {
 	// 		])
 	// 	]
 	// )
-	html_str := read_file(abs_path('html/index.html')) or {
+	html_str := read_file(abs_path('test_html/index.html')) or {
 		println(err)
 		exit(-1)
 	}

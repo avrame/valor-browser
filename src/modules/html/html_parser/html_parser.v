@@ -1,7 +1,7 @@
 module html_parser
 
-import dom { AttrMap, Element, Node, Text }
 import parser { Parser }
+import html.dom { AttrMap, Element, Node, Text }
 
 pub struct HtmlParser {
 	Parser
