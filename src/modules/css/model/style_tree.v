@@ -8,17 +8,38 @@ import datatypes { Set }
 type PropertyMap = map[string]Value
 
 // A node with associated style data.
-struct StyledNode {
-	node             &Node // pointer to a DOM node
+pub struct StyledNode {
+	node             Node // pointer to a DOM node
 	specified_values PropertyMap
 	children         []StyledNode
 }
 
-fn matches(elem &ElementData, selector &Selector) bool {
+// Return the specified value of a property if it exists, otherwise `None`.
+fn (sn StyledNode) value(name string) ?Value {
+	return sn.specified_values.get(name, none)
+}
+
+// The value of the `display` property (defaults to inline).
+fn (sn StyledNode) display() Display {
+	return match sn.value('display') {
+		'block' { .block }
+		'none' { .@none }
+		'inline' { .inline }
+		else { .inline }
+	}
+}
+
+enum Display {
+	@none
+	inline
+	block
+}
+
+fn matches(elem &ElementData, selector Selector) bool {
 	return matches_simple_selector(elem, selector)
 }
 
-fn matches_simple_selector(elem &ElementData, selector &Selector) bool {
+fn matches_simple_selector(elem ElementData, selector Selector) bool {
 	// Check type selector
 	if selector.tag_name != elem.tag_name {
 		return false
