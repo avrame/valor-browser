@@ -1,8 +1,7 @@
 module main
-import os { read_file, abs_path }
-import dom { Element, Text }
-import parser.html { parse }
 
+import os { abs_path, read_file }
+import html.html_parser { parse_html }
 
 fn main() {
 	// html_dom := Element.new(
@@ -19,11 +18,11 @@ fn main() {
 	// 		])
 	// 	]
 	// )
-	html_str := read_file(abs_path('html/index.html')) or {
+	html_str := read_file(abs_path('test_html/index.html')) or {
 		println(err)
 		exit(-1)
 	}
-	html_dom := parse(html_str)
+	html_dom := parse_html(html_str)
 
 	println(html_dom)
 }
