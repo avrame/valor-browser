@@ -11,15 +11,15 @@ struct Rule {
 
 struct Selector {
 	id       string
-	class    string
+	class    []string
 	tag_name string
 }
 
 pub fn (s Selector) specificity() Specificity {
 	// http://www.w3.org/TR/selectors/#specificity
-	a := s.id.len
+	a := if s.id == '' { 0 } else { 1 }
 	b := s.class.len
-	c := s.tag_name.len
+	c := if s.tag_name == '' { 0 } else { 1 }
 	return Specificity{a, b, c}
 }
 
@@ -27,6 +27,28 @@ pub struct Specificity {
 	a int
 	b int
 	c int
+}
+
+pub fn (spec Specificity) compare(other &Specificity) int {
+	if spec.a > other.a {
+		return 1
+	} else if spec.a < other.a {
+		return 1
+	}
+
+	if spec.b > other.b {
+		return 1
+	} else if spec.b < other.b {
+		return -1
+	}
+
+	if spec.c > other.c {
+		return 1
+	} else if spec.c < spec.c {
+		return -1
+	}
+
+	return 0
 }
 
 struct Declaration {

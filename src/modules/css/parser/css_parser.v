@@ -2,7 +2,7 @@ module css
 
 import encoding.hex
 import parser { Parser }
-import css.css_types {
+import css_types {
 	Declaration,
 	Rule,
 	Selector,
@@ -30,23 +30,23 @@ pub fn parse_css(source string) Stylesheet {
 // Parse one simple selector, e.g.: `type#id.class1.class2.class3`
 fn (mut p CssParser) parse_simple_selector() Selector {
 	mut selector := Selector{}
-	for !p.eof() {
-		match p.current_rune() {
+	for !parser.eof() {
+		match parser.current_rune() {
 			`#` {
-				p.consume_rune()
-				selector.id = p.parse_identifier()
+				parser.consume_rune()
+				selector.id = parser.parse_identifier()
 			}
 			`.` {
-				p.consume_rune()
-				selector.class << p.parse_identifier()
+				parser.consume_rune()
+				selector.class << parser.parse_identifier()
 			}
 			`*` {
 				// universal selector
-				p.consume_rune()
+				parser.consume_rune()
 			}
 			else {
-				if valid_identifier_rune(p.current_rune()) {
-					selector.tag_name = p.parse_identifier()
+				if valid_identifier_rune(parser.current_rune()) {
+					selector.tag_name = parser.parse_identifier()
 				} else {
 					break
 				}
@@ -57,35 +57,35 @@ fn (mut p CssParser) parse_simple_selector() Selector {
 }
 
 // Parse a list of rule sets, separated by optional whitespace.
-fn (p CssParser) parse_rules() []Rule {
-	mut rules := []css_types.Rule{}
+fn (parser CssParser) parse_rules() []Rule {
+	mut rules := []Rule{}
 	for {
-		p.consume_whitespace()
-		if p.eof() {
+		parser.consume_whitespace()
+		if parser.eof() {
 			break
 		}
-		rules << p.parse_rule()
+		rules << parser.parse_rule()
 	}
 	return rules
 }
 
-fn (p CssParser) parse_rule() Rule {
+fn (parser CssParser) parse_rule() Rule {
 	return Rule{
-		selectors: p.parse_selectors()
-		declarations: p.parse_declarations()
+		selectors: parser.parse_selectors()
+		declarations: parser.parse_declarations()
 	}
 }
 
 // Parse a comma-separated list of selectors.
-fn (p CssParser) parse_selectors() []Selector {
-	mut selectors := []css_types.Selector{}
+fn (parser CssParser) parse_selectors() []Selector {
+	mut selectors := []Selector{}
 	for {
-		selectors << p.parse_simple_selector()
-		p.consume_whitespace()
-		match p.current_rune() {
+		selectors << parser.parse_simple_selector()
+		parser.consume_whitespace()
+		match parser.current_rune() {
 			`,` {
-				p.consume_rune()
-				p.consume_whitespace()
+				parser.consume_rune()
+				parser.consume_whitespace()
 			}
 			`{` {
 				break
@@ -98,67 +98,61 @@ fn (p CssParser) parse_selectors() []Selector {
 	}
 	// Return selectors with highest specificity first, for use in matching.
 	selectors.sort_with_compare(fn (a &Specificity, b &Specificity) int {
-		if a < b {
-			return -1
-		}
-		if a > b {
-			return 1
-		}
-		return 0
+		return a.compare(b)
 	})
 	return selectors
 }
 
 // Parse a list of declarations enclosed in `{ ... }`.
-fn (p CssParser) parse_declarations() []Declaration {
-	assert p.consume_rune() == `{`
-	mut declarations := []css_types.Declaration{}
+fn (parser CssParser) parse_declarations() []Declaration {
+	assert parser.consume_rune() == `{`
+	mut declarations := []Declaration{}
 	for {
-		p.consume_whitespace()
-		if p.current_rune() == '}' {
-			p.consume_rune()
+		parser.consume_whitespace()
+		if parser.current_rune() == '}' {
+			parser.consume_rune()
 			break
 		}
-		declarations << p.parse_declaration()
+		declarations << parser.parse_declaration()
 	}
 	return declarations
 }
 
 // Parse one `<property>: <value>;` declaration.
-fn (p CssParser) parse_declaration() Declaration {
-	property_name := p.parse_identifier()
-	p.consume_whitespace()
+fn (parser CssParser) parse_declaration() Declaration {
+	property_name := parser.parse_identifier()
+	parser.consume_whitespace()
 
-	assert p.consume_rune() == `:`
-	p.consume_whitespace()
+	assert parser.consume_rune() == `:`
+	parser.consume_whitespace()
 
-	value := p.parse_value()
-	p.consume_whitespace()
+	value := parser.parse_value()
+	parser.consume_whitespace()
 
-	assert p.consume_rune() == `;`
+	assert parser.consume_rune() == `;`
 
 	return Declaration{property_name, value}
 }
 
 // Methods for parsing values:
 
-fn (p CssParser) parse_value() Value {
-	return match p.next_char() {
-		`0`...`10` { p.parse_length() }
-		'#' { p.parse_color() }
-		else { p.parse_identifier() }
+fn (parser CssParser) parse_value() Value {
+	return match parser.next_char() {
+		`0`...`10` { parser.parse_length() }
+		'#' { parser.parse_color() }
+		else { parser.parse_identifier() }
 	}
 }
 
-fn (p CssParser) parse_length() Value {
+fn (parser CssParser) parse_length() Value {
 	return Length{
-		value: p.parse_float()
-		unit: p.parse_unit()
+		value: parser.parse_float()
+		unit: parser.parse_unit()
 	}
 }
 
-fn (p CssParser) parse_float() f32 {
-	return p.consume_while(fn (r rune) bool {
+fn (parser CssParser) parse_float() f32 {
+	return parser.consume_while(fn (r rune) bool {
 		return match r {
 			`0`...`9`, `.` { true }
 			else { false }
@@ -166,33 +160,33 @@ fn (p CssParser) parse_float() f32 {
 	})
 }
 
-fn (p CssParser) parse_unit() Unit {
-	return match p.parse_identifier() {
+fn (parser CssParser) parse_unit() Unit {
+	return match parser.parse_identifier() {
 		'px' {}
 		else { panic('unrecognized unit') }
 	}
 }
 
-fn (p CssParser) parse_color() Value {
-	assert p.consume_char() == `#`
+fn (parser CssParser) parse_color() Value {
+	assert parser.consume_char() == `#`
 	return Color{
-		r: p.parse_hex_pair()
-		g: p.parse_hex_pair()
-		b: p.parse_hex_pair()
+		r: parser.parse_hex_pair()
+		g: parser.parse_hex_pair()
+		b: parser.parse_hex_pair()
 		a: 255
 	}
 }
 
 /// Parse two hexadecimal digits.
-fn (p CssParser) parse_hex_pair() u8 {
-	hex_str := p.input[p.pos..p.pos + 2]
-	p.pos += 2
+fn (parser CssParser) parse_hex_pair() u8 {
+	hex_str := parser.input[parser.pos..parser.pos + 2]
+	parser.pos += 2
 	return encoding.hex(hex_str)
 }
 
 /// Parse a property name or keyword.
-fn (p CssParser) parse_identifier() string {
-	p.consume_while(valid_identifier_rune)
+fn (parser CssParser) parse_identifier() string {
+	parser.consume_while(valid_identifier_rune)
 }
 
 fn valid_identifier_rune(r rune) bool {

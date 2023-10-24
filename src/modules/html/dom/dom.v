@@ -6,10 +6,16 @@ struct NodeBase {
 	children []Node
 }
 
+pub enum NodeType {
+	text
+	element
+}
+
 pub type Node = Element | Text
 
 pub struct Text {
 	NodeBase
+	node_type .text
 	content string
 }
 
@@ -21,6 +27,7 @@ pub fn Text.new(data string) Text {
 
 pub struct Element {
 	NodeBase
+	node_type .element
 	element_data ElementData
 }
 
@@ -35,6 +42,7 @@ pub fn Element.new(name string, attrs AttrMap, children []Node) Element {
 }
 
 pub struct ElementData {
+pub:
 	tag_name   string
 	attributes AttrMap
 }
@@ -46,7 +54,10 @@ pub fn (ed ElementData) id() ?string {
 }
 
 pub fn (ed ElementData) classes() Set[string] {
-	class_attr := ed.attributes['class'] or {
+	mut class_set := Set[string]{}
+	class_attr := ed.attributes['class'] or { return class_set }
+	for class in string(class_attr).split(' ') {
+		class_set.add(class)
 	}
-	class_attr.split(' ')
+	return class_set
 }
