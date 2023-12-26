@@ -15,8 +15,8 @@ pub type Node = Element | Text
 
 pub struct Text {
 	NodeBase
-	node_type .text
-	content string
+	node_type NodeType = .text
+	content   string
 }
 
 pub fn Text.new(data string) Text {
@@ -27,7 +27,7 @@ pub fn Text.new(data string) Text {
 
 pub struct Element {
 	NodeBase
-	node_type .element
+	node_type    NodeType = .element
 	element_data ElementData
 }
 
