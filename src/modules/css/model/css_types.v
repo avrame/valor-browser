@@ -58,11 +58,33 @@ struct Declaration {
 
 pub type Value = Color | Keyword | Length
 
+pub fn (v Value) to_px() f32 {
+	return match v {
+		Length { v.to_px() }
+		else { 0.0 }
+	}
+}
+
+pub fn (v Value) str() string {
+	return match v {
+		Length { v.to_px().str() }
+		Color { '${v.r}, ${v.g}, ${v.b}, ${v.a}' }
+		Keyword { v.str() }
+	}
+}
+
 type Keyword = string
 
 struct Length {
 	value f32
 	unit  Unit
+}
+
+pub fn (len Length) to_px() f32 {
+	return match len.unit {
+		.px { len.value }
+		else { panic('non-pixel lengths not implemented!') }
+	}
 }
 
 pub enum Unit {

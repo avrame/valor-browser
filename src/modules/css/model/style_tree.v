@@ -1,7 +1,7 @@
 module css
 
 import arrays { find_first, flat_map, map_indexed }
-import html.dom { ElementData, Node }
+import html.dom { Element, ElementData, Node, Text }
 import datatypes { Set }
 
 // Map from CSS property names to values.
@@ -9,24 +9,29 @@ type PropertyMap = map[string]Value
 
 // A node with associated style data.
 pub struct StyledNode {
-	node             Node // pointer to a DOM node
+	node     Node // pointer to a DOM node
+	children []StyledNode
+pub:
 	specified_values PropertyMap
-	children         []StyledNode
 }
 
 // Return the specified value of a property if it exists, otherwise `None`.
 fn (sn StyledNode) value(name string) ?Value {
-	return sn.specified_values.get(name, none)
+	return sn.specified_values[name] or { return none }
 }
 
 // The value of the `display` property (defaults to inline).
 fn (sn StyledNode) display() Display {
-	return match sn.value('display') {
-		'block' { .block }
-		'none' { .@none }
-		'inline' { .inline }
+	display := sn.value('display') or { Keyword('inline') }
+	return match display {
+		Keyword('block') { .block }
+		Keyword('none') { .@none }
 		else { .inline }
 	}
+}
+
+fn (sn StyledNode) lookup(name string, fallback_name string, default Value) Value {
+	return sn.value(name) or { sn.value(fallback_name) or { return default } }
 }
 
 enum Display {
@@ -85,16 +90,16 @@ fn matching_rules(elem ElementData, stylesheet Stylesheet) []MatchedRule {
 
 // Apply styles to a single element, returning the specified values.
 fn specified_values(elem ElementData, stylesheet Stylesheet) PropertyMap {
-	mut values := PropertyMap{}
+	mut values := PropertyMap(map[string]Value{})
 	mut matched_rules := matching_rules(elem, stylesheet)
 
 	// Go through the rules from lowest to highest specificity.
-	matched_rules.sort_with_compare(fn (a MatchedRule, b MatchedRule) {
+	matched_rules.sort_with_compare(fn (a &MatchedRule, b &MatchedRule) int {
 		return a.specificity.compare(b.specificity)
 	})
 
-	for matched_rule in matched_rules {
-		for _, declaration in matched_rule.rule.declarations {
+	for mr in matched_rules {
+		for _, declaration in mr.rule.declarations {
 			values[declaration.name] = declaration.value
 		}
 	}
@@ -104,18 +109,18 @@ fn specified_values(elem ElementData, stylesheet Stylesheet) PropertyMap {
 
 // Apply a stylesheet to an entire DOM tree, returning a StyledNode tree.
 pub fn style_tree(root Node, stylesheet Stylesheet) StyledNode {
-	specified_values := match root.node_type {
-		.element {
-			specified_values(root, stylesheet)
+	spec_values := match root {
+		Element {
+			specified_values(root.element_data, stylesheet)
 		}
-		.text {
+		Text {
 			map[string]Value{}
 		}
 	}
 
-	children := map_indexed[Node, StyledNode](root.children, fn (_ int, child Node) []StyledNode {
+	children := map_indexed[Node, StyledNode](root.children, fn [stylesheet] (_ int, child Node) StyledNode {
 		return style_tree(child, stylesheet)
 	})
 
-	return StyledNode.new(root, specified_values, children)
+	return StyledNode{root, children, spec_values}
 }

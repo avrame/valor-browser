@@ -3,6 +3,7 @@ module dom
 import datatypes { Set }
 
 struct NodeBase {
+pub:
 	children []Node
 }
 
@@ -15,8 +16,9 @@ pub type Node = Element | Text
 
 pub struct Text {
 	NodeBase
+	content string
+pub:
 	node_type NodeType = .text
-	content   string
 }
 
 pub fn Text.new(data string) Text {
@@ -27,8 +29,9 @@ pub fn Text.new(data string) Text {
 
 pub struct Element {
 	NodeBase
-	node_type    NodeType = .element
+pub:
 	element_data ElementData
+	node_type    NodeType = .element
 }
 
 pub fn Element.new(name string, attrs AttrMap, children []Node) Element {
